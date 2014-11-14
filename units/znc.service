@@ -4,7 +4,7 @@ Description=znc
 [Service]
 ExecStartPre=-/usr/bin/docker kill znc
 ExecStartPre=-/usr/bin/docker rm znc
-ExecStart=/usr/bin/docker run --name znc -itp 65000 -v /data/znc:/var/znc nano/znc:latest znc -fc
+ExecStart=/usr/bin/docker run --name znc -p 65000:65000 -v /data/znc:/data nano/znc:latest znc -d /data -f
 ExecStop=/usr/bin/docker stop znc
 
 [X-Fleet]
