@@ -1,3 +1,5 @@
+#cloud-config
+---
 coreos:
   etcd:
     # generate a new token for each unique cluster from https://discovery.etcd.io/new
@@ -11,3 +13,20 @@ coreos:
       command: start
     - name: fleet.service
       command: start
+    - name: fleet.socket
+      command: start
+      content: |
+        [Socket]
+        # Talk to the API over a Unix domain socket (default)
+        ListenStream=/var/run/fleet.sock
+        Service=fleet.service
+
+        [Install]
+        WantedBy=sockets.target
+write_files:
+  - path: /etc/profile.d/nse-function.sh
+    permissions: '0755'
+    content: |
+      function nse() {
+        sudo nsenter --pid --uts --mount --ipc --net --target $(docker inspect --format="{{ .State.Pid }}" $1)
+      }
