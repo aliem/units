@@ -1,0 +1,11 @@
+[Unit]
+Description=znc
+
+[Service]
+ExecStartPre=-/usr/bin/docker kill znc
+ExecStartPre=-/usr/bin/docker rm znc
+ExecStart=/usr/bin/docker run --name znc -itp 65000 -v /data/znc:/var/znc nano/znc:latest znc -fc
+ExecStop=/usr/bin/docker stop znc
+
+[X-Fleet]
+Conflicts=znc.service
