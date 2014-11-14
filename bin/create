@@ -15,12 +15,10 @@ function echo_green {
 THIS_DIR=$(cd $(dirname $0); pwd)
 BASEDIR=$(dirname $THIS_DIR)
 
-if [ -f $BASEDIR/.token ]; then
-    TOKEN=$(cat $BASEDIR/.token)
-else
-    echo -n "Digital Ocean API token : "
-    read TOKEN
-    echo $TOKEN > $BASEDIR/.token
+# check for DO tools in $PATH
+if ! which docl > /dev/null; then
+  echo_red 'Please install the docl gem and ensure it is in your $PATH.'
+  exit 1
 fi
 
 REGION=$1
@@ -38,18 +36,22 @@ if [ -z "$NAME" ]; then
     NAME="coreos"
 fi
 
-curl --request POST "https://api.digitalocean.com/v2/droplets" \
-     --header "Content-Type: application/json" \
-     --header "Authorization: Bearer $TOKEN" \
-     --data '{
-      "region":"'$REGION'",
-      "image":"coreos-alpha",
-      "size":"'$SIZE'",
-      "name":"'$NAME'",
-      "private_networking":true,
-      "ssh_keys":['$SSH_ID'],
-      "user_data": "'"$(cat $BASEDIR/user-data.yml | sed 's/"/\\"/g')"'"
-}'
+# curl --request POST "https://api.digitalocean.com/v2/droplets" \
+#      --header "Content-Type: application/json" \
+#      --header "Authorization: Bearer $TOKEN" \
+#      --data '{
+#       "region":"'$REGION'",
+#       "image":"coreos-alpha",
+#       "size":"'$SIZE'",
+#       "name":"'$NAME'",
+#       "private_networking":true,
+#       "ssh_keys":['$SSH_ID'],
+#       "user_data": "'"$(cat $BASEDIR/user-data.yml | sed 's/"/\\"/g')"'"
+# }'
+
+# launch the Deis cluster on DigitalOcean
+echo_yellow "Provisioning ${NAME}..."
+docl create $NAME coreos-alpha $SIZE $REGION --key=$SSH_ID --private-networking --user-data=$BASEDIR/user-data.yml --wait
 
 if [ $? -gt 0 ]; then
     echo_red "An error occurred, please inspect the curl output!"
